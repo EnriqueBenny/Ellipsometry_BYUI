@@ -14,6 +14,11 @@ Ellipsometry_Data_Processing.py -> The main python folder
 
 ellipsometry_data.csv -> The storage file for the data.
 
+ List of Refractive Indicies: https://refractiveindex.info
+
+## Requirements:
+This code needs the numpy and cmath libraries, along with matplotlib and csv.
+
 ## Notes:
 
 - Either via the provided code or manually, enter the collected data into the csv file.

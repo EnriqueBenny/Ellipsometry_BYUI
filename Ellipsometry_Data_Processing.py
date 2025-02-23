@@ -1,4 +1,5 @@
 import numpy as np
+import cmath as cm
 import matplotlib.pyplot as plt
 import csv
 
@@ -9,18 +10,41 @@ class Ellipsometer:
             Initializes the Ellipsometer class. 
 
             variables:
-                self.alpha_1: Polarizer Azimuth Angle (alpha 1) in degrees (int)
-                self.alpha_2: Analyzer (alpha 2) angles in degrees (array of int)
-                self.Aoi:     Angle of Incidence (Aoi) in degrees (array of int)
-                self.psi:     Psi value (array of float)
-                self.delta:   Delta value (array of float)
+                self.alpha_1:   Polarizer Azimuth Angle (alpha 1) in degrees (int)
+                self.alpha_2:   Analyzer (alpha 2) angles in degrees (array of int)
+                self.Aoi:       Angle of Incidence (Aoi) in degrees (array of int)
+                self.model_Aoi: Angle of Incidence (Aoi) in degress for the model calculation (array of int)
+                self.psi:       Psi value (array of float)
+                self.delta:     Delta value (array of float)
+                self.exp_P:     Our P-Value as determined by the experiment (array of float)
+                self.wavel:     Wavelength of Light from the laser (float)
+                # The comments below, from self.n0 to self.k2 need to be fixed. 
+                # It's not clear what purpose they serve, so the comments are currently general.
+                self.n0:        Atomsphere Section (int)
+                self.k0:        Atmosphere Section (int)
+                self.n1:        Film Section, best not to mess with this section unless necessary. (float)
+                self.k1:        Film Section, best not to mess with this section unless necessary. (float)
+                self.d1:        Film Section, best not to mess with this section unless necessary. (float)
+                self.n2:        Substrate Section (float)
+                self.k2:        Substrate Section (float)
         '''
 
         self.alpha_1 = 45
         self.alpha_2 = [45,90,-45,0] 
         self.Aoi = [20,25,30,35,40,45,50,55,60,65,70,75]
+        self.model_Aoi = np.arange(1,90,1)
         self.psi = []
         self.delta = []
+        self.exp_P = []
+        self.wavel = 6530.0
+        # Index of Refraction Solver Inputs
+        self.n0 = 1
+        self.k0 = 0
+        self.n1 = 1.4830
+        self.k1 = 0.0000
+        self.d1 = 14857 # Angs
+        self.n2 = 3.844
+        self.k2 = 0.015793
 
     def view_data(self):
         '''
@@ -33,7 +57,7 @@ class Ellipsometer:
                 None
         '''
 
-        with open('ellipsometry_data.csv') as data:
+        with open('Ellipsometry_BYUI/ellipsometry_data.csv') as data:
             #next(data)
             reader = csv.reader(data)
             for i in reader:
@@ -102,7 +126,7 @@ class Ellipsometer:
             self.delta.append(np.arccos(((ff-nff)/(ff+nff))/\
                               np.sin(2*np.arctan(np.tan(self.psi[-1])/np.tan(self.alpha_1)))))
 
-        with open('ellipsometry_data.csv','r') as data:
+        with open('Ellipsometry_BYUI/ellipsometry_data.csv','r') as data:
             reader = csv.reader(data)
             self.Aoi = [] # To keep the number of variables lower, this one is being reused to overwrite the 
                           # initialized version. 
@@ -130,6 +154,43 @@ class Ellipsometer:
                 self.psi[i] = round(180*self.psi[i]/np.pi,2)
                 self.delta[i] = round(180*self.delta[i]/np.pi,2)
                 print(f'Aoi: {aoi}, Psi: {self.psi}, Delta: {self.delta}')
+    
+    def Model(self):
+        '''
+            Calculates the Model Fitting.
+        '''
+        def to_rad(value):
+            return np.radians(value)
+        model_rads = list(map(to_rad, self.model_Aoi)) # Create an array from the model_Aoi of radians.
+        #print(model_rads)
+        N0 = np.complex(self.n0, self.k0)
+        N1 = np.complex(self.n1, self.k1)
+        N2 = np.complex(self.n2, self.k2)
+        
+
+
+
+    def Experiment_P(self):
+        '''
+            Taken from the second tab of the referenced Excel Document, this function calculates
+            our P values from the experimental data. The model P is calulated in Model_P.
+        '''
+        for i in range(len(self.psi)): # This loop could be condenced, but is written this way for legibility.
+            psi_rad = np.radians(self.psi[i]) # These calculations need to be done in radians.
+            delta_rad = np.radians(self.delta[i])
+
+            psi_cal = cm.tan(psi_rad) # The tangent of psi.
+            delta_cal = cm.exp(cm.rect(1, delta_rad)) # reading the documentation of rect is recommended.
+
+            self.exp_P.append(psi_cal*delta_cal)
+
+    def Model_P(self):
+        '''
+            Taken from the second tab of the referenced Excel Document, this function calculates
+            our P values from the model. The experimental P is calculated in Experiment_P
+        '''
+        pass
+
 
     def Plot_PD(self):
         '''
@@ -141,6 +202,8 @@ class Ellipsometer:
         plt.scatter(self.Aoi,self.delta)
         plt.xlim(5,90)
         plt.xticks(np.arange(5,90,5))
+        plt.ylim(0,200)
+        plt.yticks(np.arange(0,200,20))
         plt.show()
 
 # Class Call
@@ -149,8 +212,10 @@ E = Ellipsometer()
 # Method Calls
 #E.data_entry() # Keep commented if entering data via csv.
 E.view_data()
-E.Calculate() # Call after the data is entered.
-E.Plot_PD() # Call after Calculate
+E.Model()
+#E.Calculate() # Call after the data is entered.
+#E.Plot_PD() # Call after Calculate
+
 
 ''' A copy of the test data for the .csv.
 Aoi,45,90,-45,0
