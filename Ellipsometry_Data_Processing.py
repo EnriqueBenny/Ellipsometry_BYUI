@@ -18,6 +18,7 @@ class Ellipsometer:
                 self.delta:     Delta value (array of float)
                 self.exp_P:     Our P-Value as determined by the experiment (array of float)
                 self.wavel:     Wavelength of Light from the laser (float)
+
                 # The comments below, from self.n0 to self.k2 need to be fixed. 
                 # It's not clear what purpose they serve, so the comments are currently general.
                 self.n0:        Atomsphere Section (int)
@@ -157,17 +158,68 @@ class Ellipsometer:
     
     def Model(self):
         '''
-            Calculates the Model Fitting.
+            Calculates the Model Fitting. I used the map() function as a quick way to 
+            apply repeated processes while avoiding loops. This is going to be a 
+            very difficult section to read, as a warning.
         '''
-        def to_rad(value):
-            return np.radians(value)
+        # N Parameters
+        N0 = complex(self.n0, self.k0)
+        N1 = complex(self.n1, self.k1)
+        N2 = complex(self.n2, self.k2)
+
+        def to_rad(deg):
+            return np.radians(deg)
         model_rads = list(map(to_rad, self.model_Aoi)) # Create an array from the model_Aoi of radians.
         #print(model_rads)
-        N0 = np.complex(self.n0, self.k0)
-        N1 = np.complex(self.n1, self.k1)
-        N2 = np.complex(self.n2, self.k2)
-        
 
+        # All following functions are for intermediate parameters. 
+        # See columns T to AD in the third tab on the excel document.
+        def COS0(rads):
+            return cm.sqrt(1.0 - cm.sin(rads) * cm.sin(rads))
+        cos0 = list(map(COS0, model_rads))
+        
+        def COS1(value):
+            return cm.sqrt(N1**2 - N0**2 * (cm.sin(value)**2)) / N1
+        cos1 = list(map(COS1, model_rads))
+
+        def COS2(value):
+            return cm.sqrt(N2**2 - N0**2 * (cm.sin(value)**2)) / N2
+        cos2 = list(map(COS2, model_rads))
+
+        def P1_PI(value1, value2):
+            return  (N1*value1 - N0 * value2)/(N1*value1+N0*value2)
+        p1_pi = list(map(P1_PI, cos0, cos1))
+
+        def P1_SIG(value1,value2):
+            return (N0*value1 - N1*value2)/(N0*value1+N1*value2)
+        p1_sig = list(map(P1_SIG, cos0, cos1))
+
+        def P2_PI(value1, value2):
+            return (N2*value1-N1*value2)/(N2*value1+N1*value2)
+        p2_pi = list(map(P1_PI, cos1, cos2))
+
+        def P2_SIG(value1,value2):
+            return (N1*value1-N2*value2)/(N1*value1+N2*value2)
+        p2_sig = list(map(P2_SIG, cos1, cos2))
+
+        def Beta(value):
+            return 2 * np.pi * (self.d1 / self.wavel) * N1 * value
+        beta = list(map(Beta, cos1))
+
+        def P_PI(value1, value2, value3):
+            exp = cm.exp(-2j*value3)
+            return (value1 + value2 * exp)/(1 + value1 * value2 * exp)
+        p_pi = list(map(P_PI, p1_pi, p2_pi, beta))
+
+        def P_Sigma(value1, value2, value3):
+            exp = cm.exp(-2j*value3)
+            return (value1+value2*exp)/(1+value1*value2*exp)
+        p_sigma = list(map(P_Sigma, p1_sig,p2_sig,beta))
+
+        def parameter_P(value1,value2):
+            return value1/value2
+        P = list(map(parameter_P, p_pi, p_sigma))
+        print(P)
 
 
     def Experiment_P(self):
@@ -211,7 +263,7 @@ E = Ellipsometer()
 
 # Method Calls
 #E.data_entry() # Keep commented if entering data via csv.
-E.view_data()
+#E.view_data()
 E.Model()
 #E.Calculate() # Call after the data is entered.
 #E.Plot_PD() # Call after Calculate
