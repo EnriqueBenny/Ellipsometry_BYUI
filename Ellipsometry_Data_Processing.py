@@ -170,7 +170,6 @@ class Ellipsometer:
         def to_rad(deg):
             return np.radians(deg)
         model_rads = list(map(to_rad, self.model_Aoi)) # Create an array from the model_Aoi of radians.
-        #print(model_rads)
 
         # All following functions are for intermediate parameters. 
         # See columns T to AD in the third tab on the excel document.
@@ -196,7 +195,7 @@ class Ellipsometer:
 
         def P2_PI(value1, value2):
             return (N2*value1-N1*value2)/(N2*value1+N1*value2)
-        p2_pi = list(map(P1_PI, cos1, cos2))
+        p2_pi = list(map(P2_PI, cos1, cos2))
 
         def P2_SIG(value1,value2):
             return (N1*value1-N2*value2)/(N1*value1+N2*value2)
@@ -219,7 +218,35 @@ class Ellipsometer:
         def parameter_P(value1,value2):
             return value1/value2
         P = list(map(parameter_P, p_pi, p_sigma))
-        print(P)
+        
+        # The following has been made available for the entire class.
+        def model_Psi_rads(value):
+            return np.arctan(np.abs(value))
+        self.Psi_rads = list(map(model_Psi_rads,P))
+
+        def model_Delta_rads(value):
+            return cm.phase(value)
+        self.Delta_rads = list(map(model_Delta_rads,P))
+
+        def to_deg(value):
+            return np.degrees(value)
+        self.Psi_deg = list(map(to_deg,self.Psi_rads))
+        
+        def to_deg_delta(value):
+            return np.degrees(np.abs(value))
+        self.Delta_deg = list(map(to_deg_delta,self.Delta_rads))
+
+    def Model_P(self):
+        '''
+            Calculates P values from the Model. 
+            The self.Model() function must be run for this function
+            to work, so it was included to prevent user error.
+        '''
+        self.Model()
+
+        def P(value1, value2):
+            return cm.tan(value1) * cm.exp(1j * value2)
+        mod_P = list(map(P,self.Psi_rads,self.Delta_rads))
 
 
     def Experiment_P(self):
@@ -227,22 +254,33 @@ class Ellipsometer:
             Taken from the second tab of the referenced Excel Document, this function calculates
             our P values from the experimental data. The model P is calulated in Model_P.
         '''
-        for i in range(len(self.psi)): # This loop could be condenced, but is written this way for legibility.
-            psi_rad = np.radians(self.psi[i]) # These calculations need to be done in radians.
-            delta_rad = np.radians(self.delta[i])
+        def to_rads(value):
+            return np.radians(value)
+        psi_rad = list(map(to_rads,self.psi))
+        delta_rad = list(map(to_rads,self.delta))
+        
+        def Psi_Cal(value):
+            return cm.tan(value)
+        psi_cal = list(map(Psi_Cal,psi_rad))
 
-            psi_cal = cm.tan(psi_rad) # The tangent of psi.
-            delta_cal = cm.exp(cm.rect(1, delta_rad)) # reading the documentation of rect is recommended.
+        def Delta_Cal(value):
+            return cm.exp(cm.rect(1, value))
+        delta_cal = list(map(Delta_Cal,delta_rad))
 
-            self.exp_P.append(psi_cal*delta_cal)
+        def Exp_P(value1, value2):
+            return value1*value2
+        self.exp_P = list(map(Exp_P,psi_cal,delta_cal))
 
-    def Model_P(self):
+    def Fit_Err(self):
         '''
-            Taken from the second tab of the referenced Excel Document, this function calculates
-            our P values from the model. The experimental P is calculated in Experiment_P
-        '''
-        pass
+            Calculates the fitting error rate as a %. Must be run after Model().
 
+            CURRENTLY BROKEN.
+        '''
+        def Err(value1,value2):
+            return np.abs(value1-value2)/value2
+        #self.psi_err = list(map(Err,self.,self.Psi_deg))
+        #self.delta_err = list(map(Err,))
 
     def Plot_PD(self):
         '''
