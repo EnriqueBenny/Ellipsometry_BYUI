@@ -135,7 +135,7 @@ class Ellipsometer:
             for line in reader:
 
                 try: # The try/except exist to prevent issues ocurring if the formatting line is removed.
-                    erorr_test = int(line[0])
+                    error_test = int(line[0])
                 except:
                     continue
 
@@ -149,12 +149,11 @@ class Ellipsometer:
                     self.Aoi.append(aoi)
                     Cal_Psi(nt,zr)
                     Cal_Delta(ff,nff)
-
                     
             for i in range(len(self.Aoi)):
                 self.psi[i] = round(180*self.psi[i]/np.pi,2)
                 self.delta[i] = round(180*self.delta[i]/np.pi,2)
-                print(f'Aoi: {aoi}, Psi: {self.psi}, Delta: {self.delta}')
+                #print(f'Aoi: {self.Aoi[i]}, Psi: {self.psi[i]}, Delta: {self.delta[i]}')
     
     def Model(self):
         '''
@@ -166,6 +165,7 @@ class Ellipsometer:
         N0 = complex(self.n0, self.k0)
         N1 = complex(self.n1, self.k1)
         N2 = complex(self.n2, self.k2)
+
 
         def to_rad(deg):
             return np.radians(deg)
@@ -246,8 +246,7 @@ class Ellipsometer:
 
         def P(value1, value2):
             return cm.tan(value1) * cm.exp(1j * value2)
-        mod_P = list(map(P,self.Psi_rads,self.Delta_rads))
-
+        self.mod_P = list(map(P,self.Psi_rads,self.Delta_rads))
 
     def Experiment_P(self):
         '''
@@ -274,18 +273,33 @@ class Ellipsometer:
     def Fit_Err(self):
         '''
             Calculates the fitting error rate as a %. Must be run after Model().
-
-            CURRENTLY BROKEN.
         '''
+        # This function is here to identify the index values in common between the model and experimental Aoi.
+        def mem():
+            index = []
+            aoi = set(self.Aoi)
+            for i in range(len(self.model_Aoi)):
+                if self.model_Aoi[i] in aoi:
+                    index.append(i)
+            return index
+        index = mem()
+
+        comp_Psi = []
+        comp_Delta = []
+        for i in index:
+            comp_Psi.append(self.Psi_deg[i])
+            comp_Delta.append(self.Delta_deg[i])
+            
         def Err(value1,value2):
-            return np.abs(value1-value2)/value2
-        #self.psi_err = list(map(Err,self.,self.Psi_deg))
-        #self.delta_err = list(map(Err,))
+            return (np.abs(value1-value2)/value2)*100
+        self.psi_err = list(map(Err,self.psi,comp_Psi))
+        self.delta_err = list(map(Err,self.delta,comp_Delta))
 
     def Plot_PD(self):
         '''
             Plot Aoi vs Psi and Aoi vs Delta. 
             Must be called after the Calculate method.
+            This is a function to give a quick check on Psi and Delta. It contains no other data.
         '''
 
         plt.scatter(self.Aoi,self.psi)
@@ -296,16 +310,51 @@ class Ellipsometer:
         plt.yticks(np.arange(0,200,20))
         plt.show()
 
+    def Plot(self):
+        '''
+            Complete Plot statement. Mimics the plot from the second tab of the Excel document.
+        '''
+        fig = plt.figure(figsize = (40,10))
+
+        ax1 = fig.add_subplot(1,2,1)
+        ax2 = fig.add_subplot(1,2,2)
+
+        ax1.set_title('Model and Experimental Parameters')
+        ax1.plot(self.model_Aoi,self.Psi_deg, color = 'blue', label='Psi (Model)')
+        ax1.plot(self.model_Aoi,self.Delta_deg, color = 'purple', label='Delta (Model)')
+        ax1.scatter(self.Aoi, self.psi, color='red', label='Psi (Exp)')
+        ax1.scatter(self.Aoi, self.delta, color='green', label = 'Delta (Exp)')
+        ax1.legend()
+        ax1.set_xlabel('Angle of Incidence (AoI) [degrees]')
+        ax1.set_ylabel('Ellipsometric Parameters \n Psi & Delta [degrees]')
+
+        ax1.set_xlim(5,90)
+        ax1.set_xticks(np.arange(5,90,5))
+        ax1.set_ylim(0,200)
+        ax1.set_yticks(np.arange(0,200,20))
+
+        ax2.set_title('Parameter Error %')
+        ax2.plot(self.Aoi,self.psi_err, color = 'red', label='Psi (Error)')
+        ax2.plot(self.Aoi,self.delta_err, color = 'green', label='Delta (Error)')
+        ax2.scatter(self.Aoi,self.psi_err, color = 'red')
+        ax2.scatter(self.Aoi,self.delta_err, color = 'green')
+        ax2.legend()
+        ax2.set_xlabel('Angle of Incidence (AoI) [degrees]')
+        ax2.set_ylabel('Error %')
+
+        plt.show()
+
 # Class Call
 E = Ellipsometer()
 
 # Method Calls
 #E.data_entry() # Keep commented if entering data via csv.
-#E.view_data()
+#E.view_data() # Optional
+E.Calculate() # Call after the data is entered.
 E.Model()
-#E.Calculate() # Call after the data is entered.
+E.Fit_Err()
 #E.Plot_PD() # Call after Calculate
-
+E.Plot()
 
 ''' A copy of the test data for the .csv.
 Aoi,45,90,-45,0
