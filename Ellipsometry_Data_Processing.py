@@ -90,7 +90,7 @@ class Ellipsometer:
 
         self.view_data()
 
-    def Calculate(self): 
+    def Calculate(self): # Currently has issues with calculating Psi
         '''
             Calculates the Psi and Delta values. 
             Pages 446 and 447 of the Mantia Bixby paper explain what Psi and Delta are.
@@ -98,7 +98,7 @@ class Ellipsometer:
             Data must be entered prior to this function call for it to work.
         '''
 
-        def Cal_Psi(nt, zr):
+        def Cal_Psi(nt, zr): # Mysterously Problematic
             '''
                 Calculates Psi for a single line from the csv.
                 This one must be called before Cal_Delta as Psi is used in calculating delta.
@@ -149,11 +149,13 @@ class Ellipsometer:
                     self.Aoi.append(aoi)
                     Cal_Psi(nt,zr)
                     Cal_Delta(ff,nff)
-                    
-            for i in range(len(self.Aoi)):
-                self.psi[i] = round(180*self.psi[i]/np.pi,2)
-                self.delta[i] = round(180*self.delta[i]/np.pi,2)
-                #print(f'Aoi: {self.Aoi[i]}, Psi: {self.psi[i]}, Delta: {self.delta[i]}')
+
+            def to_deg(value):
+                return np.degrees(value)
+            self.psi = list(map(to_deg,self.psi))
+            self.delta = list(map(to_deg,self.delta)) 
+            print(self.psi)   
+
     
     def Model(self):
         '''
@@ -348,13 +350,13 @@ class Ellipsometer:
 E = Ellipsometer()
 
 # Method Calls
-#E.data_entry() # Keep commented if entering data via csv.
+#E.data_entry() # Keep commented if entering data via csv
 #E.view_data() # Optional
-E.Calculate() # Call after the data is entered.
-E.Model()
-E.Fit_Err()
+E.Calculate() # Call after the data is entered
+E.Model() # Call after Calculate
+E.Fit_Err() # Call after Model
 #E.Plot_PD() # Call after Calculate
-E.Plot()
+E.Plot() # Call last
 
 ''' A copy of the test data for the .csv.
 Aoi,45,90,-45,0

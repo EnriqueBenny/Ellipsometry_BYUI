@@ -3,7 +3,7 @@
 ## Introduction and Background
 The purpose of this code is to provide an improved interactability and
 visualization of an existing project: "Optical measurements on a budget: A 3D-printed
-ellipsometer" by Matthew Mantia and Teresa Bixby, linked also in this folder.
+ellipsometer" by Matthew Mantia and Teresa Bixby, linked also in this readme.
 
 While there exists a working program, it resides in excel, creating a highly limited environment for visualization and interaction. By migrating it to python, we hope to improve the code and the environment.
 
@@ -17,15 +17,36 @@ ellipsometry_data.csv -> The storage file for the data.
  List of Refractive Indicies: https://refractiveindex.info
 
 ## Requirements:
-This code needs the numpy and cmath libraries, along with matplotlib and csv.
+This code needs the numpy, cmath, matplotlib, and csv.
 
 ## Notes:
 
 - Either via the provided code or manually, enter the collected data into the csv file.
     - Notes: Do not add additional lines. Maintain the proper formatting and don't forget commas. 
     This will be handled automatically if entered in via the code.
-    *The Data in the CSV will be overwritten every time the code is run.*
+    *The Data in the CSV will be overwritten every time the code is run if data_entry() is called*
 
+## Calling Order
+1. E = Ellipsometer() # Class Call
+2. E.data_entry() # Optional
+3. E.view_data() # Optional
+4. E.Calculate()
+5. E.Plot_PD() # Optional
+6. E.Model()
+7. E.Fit_Err()
+8. E.Plot()
+
+## Test Data
+Aoi,45,90,-45,0
+25,1,60,137,67
+30,3,101,202,88
+35,11,211,373,137
+40,18,310,501,160
+45,25,357,524,153
+50,49,295,402,117
+55,50,145,219,113
+60,29,31,141,135
+65,167,225,214,155
 
 # License
 
