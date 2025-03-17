@@ -1,5 +1,6 @@
 import numpy as np
 import cmath as cm
+import math
 import matplotlib.pyplot as plt
 import csv
 
@@ -109,8 +110,13 @@ class Ellipsometer:
                     nt = the ninety degree measurement
                     zr = the zero degree measurement
             '''
+            
+            a = np.radians(self.alpha_1)
 
-            self.psi.append(np.arctan(np.tan(self.alpha_1)*np.tan(np.arccos((nt-zr)/(nt+zr))/2)))
+            self.psi.append(np.arctan(np.tan(a)*\
+                          np.tan(np.arccos((nt-zr)/(nt+zr))/2)))
+            
+
 
         def Cal_Delta(ff,nff):
             '''
@@ -123,9 +129,11 @@ class Ellipsometer:
                     ff = The Forty-Five degree measurement
                     nff = The Negative Forty-Five degree measurement
             '''
+            
+            a = np.radians(self.alpha_1)
 
             self.delta.append(np.arccos(((ff-nff)/(ff+nff))/\
-                              np.sin(2*np.arctan(np.tan(self.psi[-1])/np.tan(self.alpha_1)))))
+                np.sin(2*np.arctan(np.tan(self.psi[-1])/np.tan(a)))))
 
         with open('Ellipsometry_BYUI/ellipsometry_data.csv','r') as data:
             reader = csv.reader(data)
@@ -153,9 +161,9 @@ class Ellipsometer:
             def to_deg(value):
                 return np.degrees(value)
             self.psi = list(map(to_deg,self.psi))
-            self.delta = list(map(to_deg,self.delta)) 
-            print(self.psi)   
-
+            self.delta = list(map(to_deg,self.delta))
+            for i in range(len(self.psi)):
+                print(self.psi[i])
     
     def Model(self):
         '''
