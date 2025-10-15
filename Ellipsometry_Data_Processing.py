@@ -1,6 +1,5 @@
 import numpy as np
 import cmath as cm
-import math
 import matplotlib.pyplot as plt
 import csv
 
@@ -20,8 +19,9 @@ class Ellipsometer:
                 self.exp_P:     Our P-Value as determined by the experiment (array of float)
                 self.wavel:     Wavelength of Light from the laser (float)
 
-                # The comments below, from self.n0 to self.k2 need to be fixed. 
-                # It's not clear what purpose they serve, so the comments are currently general.
+                The comments below, from self.n0 to self.k2 need to be fixed. 
+                It's not clear what purpose they serve, so the comments are currently general.
+                
                 self.n0:        Atomsphere Section (int)
                 self.k0:        Atmosphere Section (int)
                 self.n1:        Film Section, best not to mess with this section unless necessary. (float)
@@ -38,6 +38,7 @@ class Ellipsometer:
         self.psi = []
         self.delta = []
         self.exp_P = []
+        #The following parameters may be potentially broken.
         self.wavel = 6530.0
         # Index of Refraction Solver Inputs
         self.n0 = 1
@@ -110,14 +111,11 @@ class Ellipsometer:
                     nt = the ninety degree measurement
                     zr = the zero degree measurement
             '''
-            
             a = np.radians(self.alpha_1)
 
             self.psi.append(np.arctan(np.tan(a)*\
                           np.tan(np.arccos((nt-zr)/(nt+zr))/2)))
             
-
-
         def Cal_Delta(ff,nff):
             '''
                 Calculates Delta for a single line from the csv.
@@ -129,7 +127,6 @@ class Ellipsometer:
                     ff = The Forty-Five degree measurement
                     nff = The Negative Forty-Five degree measurement
             '''
-            
             a = np.radians(self.alpha_1)
 
             self.delta.append(np.arccos(((ff-nff)/(ff+nff))/\
@@ -162,8 +159,8 @@ class Ellipsometer:
                 return np.degrees(value)
             self.psi = list(map(to_deg,self.psi))
             self.delta = list(map(to_deg,self.delta))
-            for i in range(len(self.psi)):
-                print(self.psi[i])
+            #for i in range(len(self.psi)):
+            #    print(self.psi[i])
     
     def Model(self):
         '''
@@ -305,6 +302,12 @@ class Ellipsometer:
         self.psi_err = list(map(Err,self.psi,comp_Psi))
         self.delta_err = list(map(Err,self.delta,comp_Delta))
 
+        def SNE(value1,value2):
+            return ((value1-value2)/value2)**2
+        self.Psi_sse_norm = sum(list(map(SNE,self.psi,self.Psi_deg)))
+        self.Delta_sse_norm = sum(list(map(SNE,self.delta,self.Delta_deg)))
+        self.Avg_see_norm = (self.Psi_sse_norm+self.Delta_sse_norm) / 2
+
     def Plot_PD(self):
         '''
             Plot Aoi vs Psi and Aoi vs Delta. 
@@ -363,7 +366,7 @@ E = Ellipsometer()
 E.Calculate() # Call after the data is entered
 E.Model() # Call after Calculate
 E.Fit_Err() # Call after Model
-#E.Plot_PD() # Call after Calculate
+#E.Plot_PD() # Call after Calculate (Optional)
 E.Plot() # Call last
 
 ''' A copy of the test data for the .csv.
@@ -377,4 +380,17 @@ Aoi,45,90,-45,0
 55,50,145,219,113
 60,29,31,141,135
 65,167,225,214,155
+'''
+'''A copy of data collected by the team for the .csv
+20,2392,797,47,1876
+25,4690,1454,422,3049
+30,5488,2111,516,4128
+35,8068,3143,1220,5441
+40,10131,5206,1782,5816
+45,12383,6895,2017,7458
+50,13368,7411,2345,7317
+55,12054,7129,2064,5722
+60,10319,7598,2064,5253
+65,9662,7739,2345,4456
+70,7083,7223,3424,3189
 '''
