@@ -20,15 +20,15 @@ class Ellipsometer:
                 self.wavel:     Wavelength of Light from the laser (float)
 
                 The comments below, from self.n0 to self.k2 need to be fixed. 
-                It's not clear what purpose they serve, so the comments are currently general.
+                It is not clear what purpose they serve, so the comments are currently general.
                 
-                self.n0:        Atomsphere Section (int)
-                self.k0:        Atmosphere Section (int)
-                self.n1:        Film Section, best not to mess with this section unless necessary. (float)
-                self.k1:        Film Section, best not to mess with this section unless necessary. (float)
-                self.d1:        Film Section, best not to mess with this section unless necessary. (float)
-                self.n2:        Substrate Section (float)
-                self.k2:        Substrate Section (float)
+                self.n0:        Real Index of Refraction for Air (int)
+                self.k0:        Imaginary Index of Refraction for Air (int)
+                self.n1:        Real Index of Refraction for the Thin Film (float)
+                self.k1:        Imaginary Index of Refraction for the Thin Film (float)
+                self.d1:        Estimation of the Thickness of the Thin Film (needs optimization method) (float)
+                self.n2:        Real Index of Refraction for the Substrate (float)
+                self.k2:        Imaginary Index of Refraction for the Substrate (float)
         """
 
         self.alpha_1 = 45
