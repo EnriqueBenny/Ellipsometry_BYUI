@@ -6,7 +6,7 @@ import csv
  
 class Ellipsometer:
     def __init__(self):
-        '''
+        """
             Initializes the Ellipsometer class. 
 
             variables:
@@ -29,7 +29,7 @@ class Ellipsometer:
                 self.d1:        Film Section, best not to mess with this section unless necessary. (float)
                 self.n2:        Substrate Section (float)
                 self.k2:        Substrate Section (float)
-        '''
+        """
 
         self.alpha_1 = 45
         self.alpha_2 = [45,90,-45,0] 
