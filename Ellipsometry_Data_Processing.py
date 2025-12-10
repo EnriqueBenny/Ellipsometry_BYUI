@@ -235,9 +235,9 @@ class Ellipsometer:
             return cm.phase(value)
         self.Delta_rads = list(map(model_Delta_rads,P))
 
-        def to_deg(value):
+        def to_deg_psi(value):
             return np.degrees(value)
-        self.Psi_deg = list(map(to_deg,self.Psi_rads))
+        self.Psi_deg = list(map(to_deg_psi,self.Psi_rads))
         
         def to_deg_delta(value):
             return np.degrees(np.abs(value))
@@ -248,6 +248,8 @@ class Ellipsometer:
             Calculates P values from the Model. 
             The self.Model() function must be run for this function
             to work, so it was included to prevent user error.
+            This is an optional method that a later team can build upon.
+            Neither this document or the original excel make use of it.
         '''
         self.Model()
 
@@ -257,8 +259,11 @@ class Ellipsometer:
 
     def Experiment_P(self):
         '''
-            Taken from the second tab of the referenced Excel Document, this function calculates
-            our P values from the experimental data. The model P is calulated in Model_P.
+            Taken from the second tab of the referenced Excel Document, 
+            this function calculates our P values from the experimental data. 
+            The model P is calulated in Model_P.
+            This is an optional method that a later team can build upon.
+            Neither this document or the original excel make use of it.
         '''
         def to_rads(value):
             return np.radians(value)
